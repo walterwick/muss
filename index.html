@@ -1,241 +1,427 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline Müzik Çalar</title>
-  <link rel="manifest" href="manifest.json">
-  <style>
-    /* Önceki stil kuralları aynen kalıyor */
-    :root { /* ... */ }
-    body { /* ... */ }
-    header { /* ... */ }
-    .music-list { /* ... */ }
-    .music-item { /* ... */ }
-    .player-container { /* ... */ }
-    /* Diğer stiller aynı */
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tam Özellikli Offline Müzik Çalar</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --background-color: #1e1e2e;
+            --card-color: #3c3f57;
+            --text-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: #27293d;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .music-list {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+
+        .music-item {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .music-item:hover {
+            background-color: #4b5070;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .music-item.active {
+            background-color: var(--primary-color);
+            box-shadow: 0 4px 20px rgba(108, 92, 231, 0.4);
+        }
+
+        .player-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #27293d;
+            padding: 1.5rem;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .custom-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-grow: 1;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        input[type="range"] {
+            flex-grow: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--primary-color);
+            border-radius: 50%;
+        }
+
+        .now-playing {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            min-width: 250px;
+        }
+
+        .album-art {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background-color: var(--card-color);
+            object-fit: cover;
+        }
+
+        .song-info {
+            line-height: 1.4;
+        }
+
+        .song-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .artist {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 8px;
+            margin: 2rem;
+        }
+
+        .error button {
+            margin-top: 1rem;
+            background: var(--primary-color);
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .music-list {
+                grid-template-columns: 1fr;
+                margin: 1rem;
+            }
+
+            .custom-controls {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .now-playing {
+                min-width: auto;
+                width: 100%;
+                justify-content: center;
+            }
+
+            button {
+                width: 40px;
+                height: 40px;
+                padding: 0.6rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>🎵 Offline Müzik Çalar</h1>
-  </header>
-  
-  <div class="music-list" id="musicList">
-    <div class="loading">Müzik listesi yükleniyor...</div>
-  </div>
-
-  <div class="player-container">
-    <div class="custom-controls">
-      <div class="now-playing">
-        <img src="placeholder-art.png" class="album-art" id="albumArt">
-        <div class="song-info">
-          <div class="song-title" id="songTitle">Seçili şarkı yok</div>
-          <div class="artist" id="artist">—</div>
-        </div>
-      </div>
-      
-      <input type="range" id="progress" value="0">
-      
-      <div class="controls">
-        <button id="prevBtn">⏮</button>
-        <button id="playPauseBtn">▶</button>
-        <button id="nextBtn">⏭</button>
-        <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
-      </div>
+    <header>
+        <h1>🎵 Offline Müzik Çalar</h1>
+    </header>
+    
+    <div class="music-list" id="musicList">
+        <div class="loading">Müzik listesi yükleniyor...</div>
     </div>
-  </div>
 
-  <audio id="audioPlayer"></audio>
-
-  <script>
-    const CACHE_NAME = 'music-player-v2';
-    const apiUrl = "https://mus-1sm.pages.dev/";
-    const musicListContainer = document.getElementById("musicList");
-    const audioPlayer = document.getElementById("audioPlayer");
-    let currentTrackIndex = 0;
-    let musicItems = [];
-
-    // Service Worker Kaydı
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(registration => {
-          console.log('Service Worker kaydedildi:', registration.scope);
-        })
-        .catch(error => {
-          console.log('Service Worker kaydı başarısız:', error);
-        });
-    }
-
-    async function fetchMusicList() {
-      try {
-        const cache = await caches.open(CACHE_NAME);
-        const [cachedResponse, networkResponse] = await Promise.all([
-          cache.match(apiUrl),
-          fetch(apiUrl).catch(() => null)
-        ]);
-
-        // Önbellekten veya ağdan veri işleme
-        if (networkResponse?.ok) {
-          await cache.put(apiUrl, networkResponse.clone());
-          processMusicList(await networkResponse.text());
-        } else if (cachedResponse) {
-          processMusicList(await cachedResponse.text());
-        } else {
-          throw new Error('Müzik listesi alınamadı');
-        }
-      } catch (error) {
-        showError(error);
-      }
-    }
-
-    function processMusicList(htmlText) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlText, "text/html");
-      musicItems = Array.from(doc.querySelectorAll("a"))
-        .filter(link => link.href.endsWith('.mp3'))
-        .map(link => ({
-          name: formatFileName(link.textContent),
-          url: apiUrl + link.getAttribute('href')
-        }));
-
-      if (musicItems.length > 0) {
-        renderMusicList();
-        initPlayer();
-        preCacheFirstSongs();
-      }
-    }
-
-    async function preCacheFirstSongs() {
-      const cache = await caches.open(CACHE_NAME);
-      const urlsToCache = musicItems.slice(0, 5).map(item => item.url);
-      
-      urlsToCache.forEach(async url => {
-        if (!(await cache.match(url))) {
-          await cache.add(url);
-        }
-      });
-    }
-
-    function formatFileName(name) {
-      return decodeURIComponent(name)
-        .replace(/\.mp3$/i, '')
-        .replace(/[-_]/g, ' ')
-        .trim();
-    }
-
-    function renderMusicList() {
-      musicListContainer.innerHTML = musicItems.map((item, index) => `
-        <div class="music-item ${index === currentTrackIndex ? 'active' : ''}" 
-             data-index="${index}" 
-             onclick="playMusic(${index})">
-          ${item.name}
+    <div class="player-container">
+        <div class="custom-controls">
+            <div class="now-playing">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACLSURBVHgB7dZBCsAgDERR772Lu7fQK3gEj9BKBb8QCDSTtPDBGJj8QRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRBkMx8s6AILW+0KGAAAAABJRU5ErkJggg==" class="album-art" id="albumArt">
+                <div class="song-info">
+                    <div class="song-title" id="songTitle">Seçili şarkı yok</div>
+                    <div class="artist" id="artist">—</div>
+                </div>
+            </div>
+            
+            <input type="range" id="progress" value="0">
+            
+            <div class="controls">
+                <button id="prevBtn">⏮</button>
+                <button id="playPauseBtn">▶</button>
+                <button id="nextBtn">⏭</button>
+                <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
+            </div>
         </div>
-      `).join('');
-    }
+    </div>
 
-    async function playMusic(index) {
-      currentTrackIndex = index;
-      const track = musicItems[index];
-      
-      try {
-        const cache = await caches.open(CACHE_NAME);
-        const cachedAudio = await cache.match(track.url);
-        
-        audioPlayer.src = cachedAudio ? 
-          URL.createObjectURL(await cachedAudio.blob()) : 
-          track.url;
-        
-        audioPlayer.play();
-        updateTrackInfo(track);
-        cacheMusicFile(track.url);
-      } catch (error) {
-        console.error('Çalma hatası:', error);
-      }
-    }
+    <audio id="audioPlayer"></audio>
 
-    async function cacheMusicFile(url) {
-      const cache = await caches.open(CACHE_NAME);
-      if (!(await cache.match(url))) {
-        await cache.add(url);
-      }
-    }
+    <script>
+        const CACHE_NAME = 'music-player-v3';
+        const apiUrl = "https://mus-1sm.pages.dev/";
+        const musicListContainer = document.getElementById("musicList");
+        const audioPlayer = document.getElementById("audioPlayer");
+        let currentTrackIndex = 0;
+        let musicItems = [];
 
-    function updateTrackInfo(track) {
-      document.getElementById('songTitle').textContent = track.name;
-      document.getElementById('artist').textContent = "Sanatçı";
-      renderMusicList();
-    }
+        // Service Worker Kaydı
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(registration => {
+                    console.log('Service Worker kaydedildi:', registration.scope);
+                })
+                .catch(error => {
+                    console.log('Service Worker kaydı başarısız:', error);
+                });
+        }
 
-    function showError(error) {
-      musicListContainer.innerHTML = `
-        <div class="error">
-          ❌ ${error.message}
-          <button onclick="location.reload()">Tekrar Dene</button>
-        </div>
-      `;
-    }
+        async function fetchMusicList() {
+            try {
+                const cache = await caches.open(CACHE_NAME);
+                const [cachedResponse, networkResponse] = await Promise.all([
+                    cache.match(apiUrl),
+                    fetch(apiUrl).catch(() => null)
+                ]);
 
-    // Oynatıcı kontrolleri
-    function initPlayer() {
-      audioPlayer.addEventListener('timeupdate', updateProgress);
-      audioPlayer.addEventListener('ended', playNext);
-      
-      document.getElementById('prevBtn').addEventListener('click', playPrev);
-      document.getElementById('nextBtn').addEventListener('click', playNext);
-      document.getElementById('playPauseBtn').addEventListener('click', togglePlay);
-      document.getElementById('progress').addEventListener('input', seek);
-      document.getElementById('volume').addEventListener('input', updateVolume);
+                if (networkResponse?.ok) {
+                    await cache.put(apiUrl, networkResponse.clone());
+                    processMusicList(await networkResponse.text());
+                } else if (cachedResponse) {
+                    processMusicList(await cachedResponse.text());
+                } else {
+                    throw new Error('Müzik listesi alınamadı');
+                }
+            } catch (error) {
+                showError(error);
+            }
+        }
 
-      // Klavye kontrolleri
-      document.addEventListener('keydown', handleKeyPress);
-      
-      audioPlayer.volume = localStorage.getItem('volume') || 1;
-      document.getElementById('volume').value = audioPlayer.volume;
-    }
+        function processMusicList(htmlText) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, "text/html");
+            musicItems = Array.from(doc.querySelectorAll("a"))
+                .filter(link => link.href.endsWith('.mp3'))
+                .map(link => ({
+                    name: formatFileName(link.textContent),
+                    url: apiUrl + link.getAttribute('href')
+                }));
 
-    function togglePlay() {
-      audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause();
-      document.getElementById('playPauseBtn').textContent = 
-        audioPlayer.paused ? '▶' : '⏸';
-    }
+            if (musicItems.length > 0) {
+                renderMusicList();
+                initPlayer();
+                preCacheFirstSongs();
+            }
+        }
 
-    function updateProgress() {
-      const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100 || 0;
-      document.getElementById('progress').value = progress;
-    }
+        async function preCacheFirstSongs() {
+            const cache = await caches.open(CACHE_NAME);
+            const urlsToCache = musicItems.slice(0, 5).map(item => item.url);
+            for (const url of urlsToCache) {
+                if (!(await cache.match(url))) {
+                    await cache.add(url);
+                }
+            }
+        }
 
-    function seek(e) {
-      audioPlayer.currentTime = (e.target.value * audioPlayer.duration) / 100;
-    }
+        function formatFileName(name) {
+            return decodeURIComponent(name)
+                .replace(/\.mp3$/i, '')
+                .replace(/[-_]/g, ' ')
+                .trim();
+        }
 
-    function updateVolume(e) {
-      audioPlayer.volume = e.target.value;
-      localStorage.setItem('volume', e.target.value);
-    }
+        function renderMusicList() {
+            musicListContainer.innerHTML = musicItems.map((item, index) => `
+                <div class="music-item ${index === currentTrackIndex ? 'active' : ''}" 
+                     data-index="${index}" 
+                     onclick="playMusic(${index})">
+                    ${item.name}
+                </div>
+            `).join('');
+        }
 
-    function playNext() {
-      currentTrackIndex = (currentTrackIndex + 1) % musicItems.length;
-      playMusic(currentTrackIndex);
-    }
+        async function playMusic(index) {
+            currentTrackIndex = index;
+            const track = musicItems[index];
+            
+            try {
+                const cache = await caches.open(CACHE_NAME);
+                const cachedAudio = await cache.match(track.url);
+                
+                audioPlayer.src = cachedAudio ? 
+                    URL.createObjectURL(await cachedAudio.blob()) : 
+                    track.url;
+                
+                audioPlayer.play();
+                updateTrackInfo(track);
+                cacheMusicFile(track.url);
+            } catch (error) {
+                console.error('Çalma hatası:', error);
+            }
+        }
 
-    function playPrev() {
-      currentTrackIndex = (currentTrackIndex - 1 + musicItems.length) % musicItems.length;
-      playMusic(currentTrackIndex);
-    }
+        async function cacheMusicFile(url) {
+            const cache = await caches.open(CACHE_NAME);
+            if (!(await cache.match(url))) {
+                await cache.add(url);
+            }
+        }
 
-    function handleKeyPress(e) {
-      switch(e.code) {
-        case 'Space': togglePlay(); e.preventDefault(); break;
-        case 'ArrowRight': audioPlayer.currentTime += 5; break;
-        case 'ArrowLeft': audioPlayer.currentTime -= 5; break;
-        case 'MediaTrackNext': playNext(); break;
-        case 'MediaTrackPrevious': playPrev(); break;
-      }
-    }
+        function updateTrackInfo(track) {
+            document.getElementById('songTitle').textContent = track.name;
+            document.getElementById('artist').textContent = "Bilinmiyor";
+            renderMusicList();
+        }
 
-    // Uygulamayı başlat
-    fetchMusicList();
-  </script>
+        function showError(error) {
+            musicListContainer.innerHTML = `
+                <div class="error">
+                    ❌ ${error.message}
+                    <button onclick="location.reload()">Tekrar Dene</button>
+                </div>
+            `;
+        }
+
+        // Oynatıcı kontrolleri
+        function initPlayer() {
+            audioPlayer.addEventListener('timeupdate', updateProgress);
+            audioPlayer.addEventListener('ended', playNext);
+            
+            document.getElementById('prevBtn').addEventListener('click', playPrev);
+            document.getElementById('nextBtn').addEventListener('click', playNext);
+            document.getElementById('playPauseBtn').addEventListener('click', togglePlay);
+            document.getElementById('progress').addEventListener('input', seek);
+            document.getElementById('volume').addEventListener('input', updateVolume);
+
+            document.addEventListener('keydown', handleKeyPress);
+            
+            audioPlayer.volume = localStorage.getItem('volume') || 1;
+            document.getElementById('volume').value = audioPlayer.volume;
+        }
+
+        function togglePlay() {
+            audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause();
+            document.getElementById('playPauseBtn').textContent = 
+                audioPlayer.paused ? '▶' : '⏸';
+        }
+
+        function updateProgress() {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100 || 0;
+            document.getElementById('progress').value = progress;
+        }
+
+        function seek(e) {
+            audioPlayer.currentTime = (e.target.value * audioPlayer.duration) / 100;
+        }
+
+        function updateVolume(e) {
+            audioPlayer.volume = e.target.value;
+            localStorage.setItem('volume', e.target.value);
+        }
+
+        function playNext() {
+            currentTrackIndex = (currentTrackIndex + 1) % musicItems.length;
+            playMusic(currentTrackIndex);
+        }
+
+        function playPrev() {
+            currentTrackIndex = (currentTrackIndex - 1 + musicItems.length) % musicItems.length;
+            playMusic(currentTrackIndex);
+        }
+
+        function handleKeyPress(e) {
+            switch(e.code) {
+                case 'Space': togglePlay(); e.preventDefault(); break;
+                case 'ArrowRight': audioPlayer.currentTime += 5; break;
+                case 'ArrowLeft': audioPlayer.currentTime -= 5; break;
+                case 'MediaTrackNext': playNext(); break;
+                case 'MediaTrackPrevious': playPrev(); break;
+            }
+        }
+
+        // Uygulamayı başlat
+        fetchMusicList();
+    </script>
 </body>
 </html>
